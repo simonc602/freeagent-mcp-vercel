@@ -337,6 +337,31 @@ export async function updateBankTransactionExplanation(
     explanationPayload.transfer_bank_account = updateFields.transfer_bank_account;
   }
 
+  // Attachment (receipt) — mirrors the create handler, incl. optional gzip
+  if (updateFields.attachment) {
+    let attachmentData = updateFields.attachment.data;
+
+    if (updateFields.attachment.is_gzipped) {
+      try {
+        const compressedBuffer = Buffer.from(attachmentData, 'base64');
+        const decompressedBuffer = gunzipSync(compressedBuffer);
+        attachmentData = decompressedBuffer.toString('base64');
+      } catch (error) {
+        throw new Error(`Failed to decompress gzipped attachment: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    const attachmentPayload: Record<string, string> = {
+      data: attachmentData,
+      file_name: updateFields.attachment.file_name,
+      content_type: updateFields.attachment.content_type
+    };
+    if (updateFields.attachment.description) {
+      attachmentPayload.description = updateFields.attachment.description;
+    }
+    explanationPayload.attachment = attachmentPayload;
+  }
+
   const response = await client.put<{ bank_transaction_explanation: FreeAgentBankTransactionExplanation }>(
     explanationUrl,
     { bank_transaction_explanation: explanationPayload }
