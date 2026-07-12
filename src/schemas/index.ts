@@ -673,7 +673,11 @@ export const UpdateBankTransactionExplanationInputSchema = z.object({
   // Transfer information
   transfer_bank_account: z.string()
     .optional()
-    .describe("Destination bank account URL or ID for transfers")
+    .describe("Destination bank account URL or ID for transfers"),
+  // Attachment
+  attachment: AttachmentSchema
+    .optional()
+    .describe("Optional file attachment (receipt) to add to the explanation")
 }).strict();
 
 export const UpdateTimeslipInputSchema = z.object({
