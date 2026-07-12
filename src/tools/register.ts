@@ -20,7 +20,7 @@ import { logExpense } from "./log-expense.js";
 import { listBills, getBill, createBill } from "./bills.js";
 import { listTimeslips, getTimeslip, createTimeslip, updateTimeslip } from "./timeslips.js";
 import { listBankAccounts, getBankAccount, listBankTransactions, getBankTransaction } from "./bank-accounts.js";
-import { listBankTransactionExplanations, getBankTransactionExplanation, createBankTransactionExplanation, updateBankTransactionExplanation } from "./bank-transactions.js";
+import { listBankTransactionExplanations, getBankTransactionExplanation, createBankTransactionExplanation, updateBankTransactionExplanation, deleteAttachment } from "./bank-transactions.js";
 import { reconcileBankTransaction } from "./reconcile.js";
 import { listProjects, getProject, createProject } from "./projects.js";
 import { listTasks, getTask, createTask } from "./tasks.js";
@@ -37,7 +37,7 @@ import {
   ListTimeslipsInputSchema, GetTimeslipInputSchema, CreateTimeslipInputSchema, UpdateTimeslipInputSchema,
   ListBankAccountsInputSchema, GetBankAccountInputSchema, ListBankTransactionsInputSchema, GetBankTransactionInputSchema,
   ListBankTransactionExplanationsInputSchema, GetBankTransactionExplanationInputSchema,
-  CreateBankTransactionExplanationInputSchema, UpdateBankTransactionExplanationInputSchema,
+  CreateBankTransactionExplanationInputSchema, UpdateBankTransactionExplanationInputSchema, DeleteAttachmentInputSchema,
   ReconcileBankTransactionInputSchema,
   ListProjectsInputSchema, GetProjectInputSchema, CreateProjectInputSchema,
   ListTasksInputSchema, GetTaskInputSchema, CreateTaskInputSchema,
@@ -388,6 +388,14 @@ export const toolDefinitions: ToolDefinition[] = [
     inputSchema: UpdateBankTransactionExplanationInputSchema.shape,
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
     handler: updateBankTransactionExplanation,
+  },
+  {
+    name: "freeagent_delete_attachment",
+    title: "Delete FreeAgent Attachment",
+    description: "Delete an attachment (receipt/file) by its ID or URL. Use to remove a wrong or corrupt attachment so a corrected one can be attached — FreeAgent does not overwrite existing attachments, so replacing a receipt requires deleting the old one first.",
+    inputSchema: DeleteAttachmentInputSchema.shape,
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true },
+    handler: deleteAttachment,
   },
   {
     name: "freeagent_reconcile_bank_transaction",
