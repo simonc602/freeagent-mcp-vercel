@@ -680,6 +680,29 @@ export const UpdateBankTransactionExplanationInputSchema = z.object({
     .describe("Optional file attachment (receipt) to add to the explanation")
 }).strict();
 
+export const DeleteAttachmentInputSchema = z.object({
+  attachment_id: z.string()
+    .min(1)
+    .describe("The FreeAgent attachment ID (numeric) or full URL, e.g. https://api.freeagent.com/v2/attachments/123")
+}).strict();
+
+export const AttachFromUrlInputSchema = z.object({
+  bank_transaction_explanation_id: z.string()
+    .min(1)
+    .describe("The FreeAgent bank transaction explanation ID (numeric) or full URL to attach the file to"),
+  url: z.string()
+    .url()
+    .describe("A directly-downloadable file URL (e.g. a Composio Gmail attachment download URL). The server fetches it server-side, so no file bytes are relayed through the model."),
+  file_name: z.string()
+    .min(1)
+    .describe("Filename to store the attachment as, e.g. 'invoice.pdf'"),
+  content_type: z.enum(["application/pdf", "image/png", "image/jpeg", "image/gif"])
+    .describe("MIME type of the file"),
+  description: z.string()
+    .optional()
+    .describe("Optional description of the attachment")
+}).strict();
+
 export const UpdateTimeslipInputSchema = z.object({
   timeslip_id: z.string()
     .min(1)
@@ -1040,6 +1063,8 @@ export type ListBankTransactionExplanationsInput = z.infer<typeof ListBankTransa
 export type GetBankTransactionExplanationInput = z.infer<typeof GetBankTransactionExplanationInputSchema>;
 export type CreateBankTransactionExplanationInput = z.infer<typeof CreateBankTransactionExplanationInputSchema>;
 export type UpdateBankTransactionExplanationInput = z.infer<typeof UpdateBankTransactionExplanationInputSchema>;
+export type DeleteAttachmentInput = z.infer<typeof DeleteAttachmentInputSchema>;
+export type AttachFromUrlInput = z.infer<typeof AttachFromUrlInputSchema>;
 export type GetCompanyInput = z.infer<typeof GetCompanyInputSchema>;
 export type ListUsersInput = z.infer<typeof ListUsersInputSchema>;
 export type ReconcileBankTransactionInput = z.infer<typeof ReconcileBankTransactionInputSchema>;
