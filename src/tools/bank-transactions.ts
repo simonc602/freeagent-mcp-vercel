@@ -12,13 +12,77 @@ import type {
   ListBankTransactionExplanationsInput,
   GetBankTransactionExplanationInput,
   CreateBankTransactionExplanationInput,
-  UpdateBankTransactionExplanationInput
+  UpdateBankTransactionExplanationInput,
+  DeleteAttachmentInput,
+  AttachFromUrlInput
 } from "../schemas/index.js";
 import {
   formatResponse,
   createPaginationMetadata,
   extractIdFromUrl
 } from "../services/formatter.js";
+
+/**
+ * Delete an attachment (receipt/file) by ID.
+ *
+ * FreeAgent does not overwrite an existing attachment when an explanation is
+ * updated, so use this to remove a wrong/corrupt attachment before re-adding
+ * a corrected one (enables an attach -> verify -> delete+retry loop).
+ */
+export async function deleteAttachment(
+  client: FreeAgentApiClient,
+  params: DeleteAttachmentInput
+): Promise<string> {
+  const { attachment_id } = params;
+  const attachmentUrl = attachment_id.startsWith('http')
+    ? attachment_id
+    : `/attachments/${attachment_id}`;
+
+  await client.delete(attachmentUrl);
+
+  const id = attachment_id.startsWith('http')
+    ? attachment_id.split('/').pop()
+    : attachment_id;
+
+  return `✅ Successfully deleted attachment ${id}. The file has been removed; you can now attach a replacement.`;
+}
+
+/**
+ * Attach a file to a bank transaction explanation by fetching it from a URL
+ * server-side (e.g. a Composio Gmail attachment download URL).
+ *
+ * The server downloads the file and Base64-encodes it before uploading to
+ * FreeAgent, so the actual file bytes never pass through the model — this
+ * preserves the genuine document exactly and avoids transcription corruption.
+ */
+export async function attachFromUrl(
+  client: FreeAgentApiClient,
+  params: AttachFromUrlInput
+): Promise<string> {
+  const { bank_transaction_explanation_id, url, file_name, content_type, description } = params;
+
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Failed to download attachment from URL (HTTP ${res.status} ${res.statusText}).`);
+  }
+  const bytes = Buffer.from(await res.arrayBuffer());
+  const data = bytes.toString("base64");
+
+  const explanationUrl = bank_transaction_explanation_id.startsWith('http')
+    ? bank_transaction_explanation_id
+    : `/bank_transaction_explanations/${bank_transaction_explanation_id}`;
+
+  const attachment: Record<string, string> = { data, file_name, content_type };
+  if (description) attachment.description = description;
+
+  await client.put(explanationUrl, { bank_transaction_explanation: { attachment } });
+
+  const id = bank_transaction_explanation_id.startsWith('http')
+    ? bank_transaction_explanation_id.split('/').pop()
+    : bank_transaction_explanation_id;
+
+  return `✅ Fetched ${file_name} (${bytes.length} bytes) from the source URL and attached it to explanation ${id}. The original document was preserved exactly (no bytes relayed through the model).`;
+}
 
 /**
  * List bank transaction explanations with optional filtering and pagination

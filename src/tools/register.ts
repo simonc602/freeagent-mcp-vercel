@@ -20,7 +20,7 @@ import { logExpense } from "./log-expense.js";
 import { listBills, getBill, createBill } from "./bills.js";
 import { listTimeslips, getTimeslip, createTimeslip, updateTimeslip } from "./timeslips.js";
 import { listBankAccounts, getBankAccount, listBankTransactions, getBankTransaction } from "./bank-accounts.js";
-import { listBankTransactionExplanations, getBankTransactionExplanation, createBankTransactionExplanation, updateBankTransactionExplanation, deleteAttachment } from "./bank-transactions.js";
+import { listBankTransactionExplanations, getBankTransactionExplanation, createBankTransactionExplanation, updateBankTransactionExplanation, deleteAttachment, attachFromUrl } from "./bank-transactions.js";
 import { reconcileBankTransaction } from "./reconcile.js";
 import { listProjects, getProject, createProject } from "./projects.js";
 import { listTasks, getTask, createTask } from "./tasks.js";
@@ -37,7 +37,7 @@ import {
   ListTimeslipsInputSchema, GetTimeslipInputSchema, CreateTimeslipInputSchema, UpdateTimeslipInputSchema,
   ListBankAccountsInputSchema, GetBankAccountInputSchema, ListBankTransactionsInputSchema, GetBankTransactionInputSchema,
   ListBankTransactionExplanationsInputSchema, GetBankTransactionExplanationInputSchema,
-  CreateBankTransactionExplanationInputSchema, UpdateBankTransactionExplanationInputSchema, DeleteAttachmentInputSchema,
+  CreateBankTransactionExplanationInputSchema, UpdateBankTransactionExplanationInputSchema, DeleteAttachmentInputSchema, AttachFromUrlInputSchema,
   ReconcileBankTransactionInputSchema,
   ListProjectsInputSchema, GetProjectInputSchema, CreateProjectInputSchema,
   ListTasksInputSchema, GetTaskInputSchema, CreateTaskInputSchema,
@@ -396,6 +396,14 @@ export const toolDefinitions: ToolDefinition[] = [
     inputSchema: DeleteAttachmentInputSchema.shape,
     annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true },
     handler: deleteAttachment,
+  },
+  {
+    name: "freeagent_attach_from_url",
+    title: "Attach Receipt to Explanation from URL",
+    description: "Attach a receipt/invoice to a bank transaction explanation by fetching the file directly from a download URL (e.g. a Composio Gmail attachment URL). The server downloads and uploads the file, so the genuine document is preserved byte-for-byte with no data relayed through the model. Use this for real email attachments; fall back to update_bank_transaction_explanation with an inline attachment only for rendered email bodies.",
+    inputSchema: AttachFromUrlInputSchema.shape,
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+    handler: attachFromUrl,
   },
   {
     name: "freeagent_reconcile_bank_transaction",
